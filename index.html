@@ -366,7 +366,7 @@
         <h1>Save Your Own Videos<br><span>Instantly</span></h1>
     </div>
     <div class="hero-subtitle">
-        Fast, clean, and unlimited backups for your TikTok, Facebook, and Instagram videos.
+        Fast, clean, and secure backups for your personal TikTok, Facebook, and Instagram videos.
     </div>
 
     <!-- Main Tool Card -->
@@ -433,7 +433,7 @@
         <span>TikTok</span> • <span>Facebook</span> • <span>Instagram</span>
     </div>
 
-    <!-- Active Adsterra Ad Unit -->
+    <!-- Clean Adsterra Container Placement -->
     <div class="ad-container">
         <script data-cfasync="false" src="https://accountut.com/1/11d9f607197459c0ed4ad7f7b7e57f26"></script>
     </div>
@@ -447,11 +447,11 @@
             </div>
             <div class="modal-body">
                 <h3>1. Acceptance of Terms</h3>
-                <p>By accessing and using Clipify, you agree to comply with and be bound by these Terms of Service.</p>
-                <h3>2. Permitted Use</h3>
-                <p>Clipify provides web-based tools to process TikTok, Facebook, and Instagram URLs for personal media backup. Users must hold rights or permission for any media downloaded.</p>
-                <h3>3. Copyright & Intellectual Property</h3>
-                <p>You agree not to use Clipify to infringe upon the intellectual property rights of content creators. Clipify does not store or host media content on its servers.</p>
+                <p>By accessing and using Clipify, you agree to comply with these Terms of Service. This platform is strictly dedicated to non-harmful, lawful media management.</p>
+                <h3>2. Permitted & Ethical Use</h3>
+                <p>Clipify provides web tools solely to help users securely save personal videos from TikTok, Facebook, and Instagram. Downloading copyrighted content without explicit permission or using media for malicious, abusive, or unlawful purposes is strictly forbidden.</p>
+                <h3>3. Intellectual Property</h3>
+                <p>Clipify does not host, re-upload, or store media files on its servers. Users maintain full responsibility for verifying ownership and proper licensing of media assets processed through the platform.</p>
             </div>
         </div>
     </div>
@@ -464,10 +464,10 @@
                 <button class="close-modal" onclick="closeModal('privacyModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <h3>1. Information Collection</h3>
-                <p>Clipify does not store your download history or collect personal identifying information during link processing.</p>
-                <h3>2. Advertising Networks</h3>
-                <p>We work with third-party ad networks (such as Adsterra) that may use cookies or browser tokens to display relevant advertisements.</p>
+                <h3>1. Data Protection & Privacy</h3>
+                <p>Clipify respects user privacy. We do not store download histories, log individual video URLs, or collect personal identifying details during processing.</p>
+                <h3>2. Safe Advertising Standards</h3>
+                <p>We work with third-party ad networks (such as Adsterra) to deliver non-intrusive banner advertisements. Ad experiences are governed by strict standard safety guidelines to maintain a clean user environment free from harmful content.</p>
             </div>
         </div>
     </div>
@@ -480,7 +480,7 @@
                 <button class="close-modal" onclick="closeModal('aboutModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Clipify v1.0 Pro is a fast web utility designed for direct download processing of public videos from TikTok, Facebook, and Instagram.</p>
+                <p>Clipify v1.0 Pro is a fast web utility created to assist video owners in safely archiving and backing up their personal media assets from TikTok, Facebook, and Instagram.</p>
             </div>
         </div>
     </div>
@@ -541,7 +541,7 @@
             }
 
             if (!urlInput) {
-                showStatus('Please paste a video link first.', 'error');
+                showStatus('Please paste your video link first.', 'error');
                 return;
             }
 
@@ -551,10 +551,15 @@
             }
 
             btn.disabled = true;
-            showStatus('Fetching download link...', 'info');
+            showStatus('Connecting to secure server...', 'info');
+
+            // Public backend endpoint wrapped inside CORS Proxy to bypass browser cross-origin blocks
+            const targetEndpoint = 'https://api.cobalt.tools/api/json';
+            const wrappedProxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetEndpoint);
 
             try {
-                const response = await fetch('https://api.cobalt.tools/api/json', {
+                showStatus('Fetching your video...', 'info');
+                const response = await fetch(wrappedProxyUrl, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -568,6 +573,10 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error('Server returned an invalid response');
+                }
+
                 const data = await response.json();
 
                 if (data.url) {
@@ -577,10 +586,10 @@
                     showStatus('Download ready! Opening file...', 'success');
                     window.location.href = data.picker[0].url;
                 } else {
-                    showStatus(data.text || 'Unable to process this link. Please check the URL.', 'error');
+                    showStatus(data.text || 'Unable to process this link. Please try again.', 'error');
                 }
             } catch (err) {
-                showStatus('Download server is busy. Please try again in a moment.', 'error');
+                showStatus('Download server is temporary busy. Please try again in a few seconds.', 'error');
             } finally {
                 btn.disabled = false;
             }
