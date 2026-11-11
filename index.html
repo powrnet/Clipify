@@ -30,7 +30,7 @@
   <main class="w-full max-w-3xl mx-auto px-4 py-8 flex-1 flex flex-col items-center">
     
     <!-- Hero Title -->
-    <div class="text-center mb-8">
+    <div class="text-center mb-6">
       <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-3 tracking-tight">
         Download Social Media Videos <span class="text-blue-500">Instantly</span>
       </h1>
@@ -39,17 +39,17 @@
       </p>
     </div>
 
-    <!-- Downloader Box -->
-    <div class="w-full bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-2xl backdrop-blur-sm">
+    <!-- Branded Container Card -->
+    <div class="w-full bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-2xl backdrop-blur-sm space-y-4">
       
-      <form id="downloadForm" onsubmit="processDownload(event)" class="space-y-4">
-        <div class="relative flex items-center">
+      <!-- Custom Branded Input Bar -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1 flex items-center">
           <input 
             type="url" 
             id="videoUrl" 
-            placeholder="Paste video link here (e.g. https://vt.tiktok.com/...)" 
-            required 
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3.5 pl-4 pr-12 text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            placeholder="Paste video link here..." 
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3.5 pl-4 pr-12 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
           />
           <button 
             type="button" 
@@ -60,16 +60,32 @@
             <i data-lucide="clipboard" class="w-5 h-5"></i>
           </button>
         </div>
-
         <button 
-          type="submit" 
-          id="submitBtn"
-          class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer"
+          type="button" 
+          onclick="submitToEngine()"
+          class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer flex-shrink-0"
         >
           <i data-lucide="arrow-down-circle" class="w-5 h-5"></i>
           <span>Download Now</span>
         </button>
-      </form>
+      </div>
+
+      <!-- Secure Embedded Processing Frame (Keeps users strictly inside your layout) -->
+      <div class="w-full bg-slate-900 rounded-xl overflow-hidden border border-slate-700 relative" style="height: 420px;">
+        <div id="loadingOverlay" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center gap-3 z-10 text-slate-400">
+          <div class="inline-block animate-spin text-blue-500">
+            <i data-lucide="loader-2" class="w-8 h-8"></i>
+          </div>
+          <p class="text-xs">Preparing Clipify stream engine...</p>
+        </div>
+        <iframe 
+          id="engineFrame"
+          src="https://cobalt.tools" 
+          class="w-full h-full border-0 scale-[1.01]" 
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
+          onload="hideLoader()"
+        ></iframe>
+      </div>
 
     </div>
 
@@ -84,7 +100,7 @@
       <span class="flex items-center gap-1.5"><i data-lucide="facebook" class="w-4 h-4 text-blue-500"></i> Facebook</span>
     </div>
 
-    <!-- Adsterra Container -->
+    <!-- Ad Space Container (Ready for Adsterra code) -->
     <div class="w-full mt-8 flex justify-center min-h-[90px] bg-slate-800/30 border border-dashed border-slate-800 rounded-xl items-center text-slate-600 text-xs">
       <span>Ad Space (Paste Adsterra Code Here)</span>
     </div>
@@ -99,7 +115,7 @@
     </div>
   </footer>
 
-  <!-- Script -->
+  <!-- Script for Interactivity -->
   <script>
     lucide.createIcons();
 
@@ -112,15 +128,22 @@
       }
     }
 
-    function processDownload(e) {
-      e.preventDefault();
+    function submitToEngine() {
+      const url = document.getElementById('videoUrl').value.trim();
+      if (!url) return;
       
-      const inputUrl = document.getElementById('videoUrl').value.trim();
-      if (!inputUrl) return;
+      // Updates the embedded workspace frame instantly with the user's link
+      const frame = document.getElementById('engineFrame');
+      frame.src = `https://cobalt.tools/?url=${encodeURIComponent(url)}`;
+      
+      // Show loader briefly while it shifts
+      const loader = document.getElementById('loadingOverlay');
+      if (loader) loader.style.display = 'flex';
+    }
 
-      // Point directly to the active cobalt.tools domain endpoint
-      const targetUrl = `https://cobalt.tools/?url=${encodeURIComponent(inputUrl)}`;
-      window.location.href = targetUrl;
+    function hideLoader() {
+      const loader = document.getElementById('loadingOverlay');
+      if (loader) loader.style.display = 'none';
     }
   </script>
 </body>
