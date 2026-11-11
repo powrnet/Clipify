@@ -1,599 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clipify - Save Your Own Videos</title>
-    
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+async function processDownload() {
+    const urlInput = document.getElementById('videoUrl').value.trim();
+    const termsChecked = document.getElementById('termsCheck').checked;
+    const btn = document.getElementById('dlBtn');
+
+    if (!termsChecked) {
+        showStatus('Please confirm you own the video or have permission to download it.', 'error');
+        return;
+    }
+
+    if (!urlInput) {
+        showStatus('Please paste your video link first.', 'error');
+        return;
+    }
+
+    if (!isValidPlatformUrl(urlInput)) {
+        showStatus('Only TikTok, Facebook, and Instagram links are supported.', 'error');
+        return;
+    }
+
+    btn.disabled = true;
+    showStatus('Connecting to secure server...', 'info');
+
+    const targetEndpoint = 'https://api.cobalt.tools/api/json';
+    const wrappedProxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetEndpoint);
+
+    try {
+        const response = await fetch(wrappedProxyUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: urlInput,
+                downloadMode: currentMode === 'audio' ? 'audio' : 'auto',
+                isAudioOnly: currentMode === 'audio',
+                isAudioMuted: currentMode === 'mute'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Server response failed');
         }
 
-        body {
-            background-color: #0b0f19;
-            color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+        const data = await response.json();
+        let downloadUrl = '';
+
+        if (data.url) {
+            downloadUrl = data.url;
+        } else if (data.status === 'picker' && data.picker && data.picker.length > 0) {
+            downloadUrl = data.picker[0].url;
         }
 
-        .header-top {
-            width: 100%;
-            max-width: 550px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
+        if (downloadUrl) {
+            // Success: Display a direct clickable link to bypass browser script blocks
+            showStatus('Success! Click the button below to save your file:', 'success');
+            
+            const msgEl = document.getElementById('statusMsg');
+            msgEl.innerHTML += `<br><br><a href="${downloadUrl}" target="_blank" style="display: inline-block; background: #16a34a; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">📥 Click Here to Save File</a>`;
+        } else {
+            showStatus(data.text || 'Unable to process this link. Please check the URL.', 'error');
         }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .logo-badge {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            padding: 8px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .version-tag {
-            background: rgba(255, 255, 255, 0.1);
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 6px;
-            color: #93c5fd;
-        }
-
-        .hero-title {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .hero-title h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            line-height: 1.2;
-        }
-
-        .hero-title h1 span {
-            color: #3b82f6;
-        }
-
-        .hero-subtitle {
-            text-align: center;
-            font-size: 0.85rem;
-            color: #9ca3af;
-            max-width: 500px;
-            margin-bottom: 25px;
-        }
-
-        /* Main Card Container */
-        .main-card {
-            background: #ffffff;
-            color: #111827;
-            width: 100%;
-            max-width: 550px;
-            border-radius: 24px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            margin-bottom: 20px;
-        }
-
-        .supported-services {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #4b5563;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .mascot-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 15px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 14px 14px 14px 40px;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .input-group input:focus {
-            border-color: #3b82f6;
-        }
-
-        .input-group svg {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            fill: #6b7280;
-        }
-
-        .controls-row {
-            display: flex;
-            background: #f3f4f6;
-            padding: 4px;
-            border-radius: 12px;
-            gap: 4px;
-            margin-bottom: 15px;
-        }
-
-        .control-btn {
-            flex: 1;
-            border: none;
-            background: transparent;
-            padding: 10px 4px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            color: #4b5563;
-            transition: all 0.2s;
-        }
-
-        .control-btn.active {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        /* Checkbox Group */
-        .checkbox-group {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            font-size: 0.78rem;
-            color: #4b5563;
-            margin-bottom: 15px;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .checkbox-group input {
-            margin-top: 2px;
-            cursor: pointer;
-            width: 15px;
-            height: 15px;
-        }
-
-        .checkbox-group a {
-            color: #2563eb;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .download-btn {
-            width: 100%;
-            padding: 14px;
-            background: #2563eb;
-            color: #ffffff;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-bottom: 15px;
-        }
-
-        .download-btn:hover {
-            background: #1d4ed8;
-        }
-
-        .download-btn:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-        }
-
-        .status-message {
-            text-align: center;
-            font-size: 0.85rem;
-            margin-bottom: 12px;
-            min-height: 20px;
-            font-weight: 500;
-        }
-
-        .status-message.error { color: #dc2626; }
-        .status-message.success { color: #16a34a; }
-        .status-message.info { color: #2563eb; }
-
-        /* Bottom Nav Bar */
-        .bottom-nav {
-            background: #111827;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            width: 100%;
-            max-width: 550px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 5px;
-            margin-bottom: 15px;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: #9ca3af;
-            font-size: 0.7rem;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            background: none;
-        }
-
-        .nav-item svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-        }
-
-        .platforms-footer {
-            display: flex;
-            gap: 15px;
-            font-size: 0.8rem;
-            color: #9ca3af;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-
-        /* Ad Container Styling for Adsterra */
-        .ad-container {
-            width: 100%;
-            max-width: 550px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px dashed rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            min-height: 90px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        /* Legal Modal Window */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: #ffffff;
-            color: #111827;
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 16px;
-            padding: 25px;
-            position: relative;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 10px;
-        }
-
-        .modal-header h2 {
-            font-size: 1.25rem;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6b7280;
-        }
-
-        .modal-body {
-            font-size: 0.875rem;
-            line-height: 1.6;
-            color: #374151;
-        }
-
-        .modal-body h3 {
-            margin-top: 12px;
-            margin-bottom: 6px;
-            color: #111827;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Header / Top Bar -->
-    <div class="header-top">
-        <div class="logo-area">
-            <div class="logo-badge">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            </div>
-            Clipify
-        </div>
-        <div class="version-tag">v1.0 Pro</div>
-    </div>
-
-    <!-- Hero Section -->
-    <div class="hero-title">
-        <h1>Save Your Own Videos<br><span>Instantly</span></h1>
-    </div>
-    <div class="hero-subtitle">
-        Fast, clean, and secure backups for your personal TikTok, Facebook, and Instagram videos.
-    </div>
-
-    <!-- Main Tool Card -->
-    <div class="main-card">
-        <div class="supported-services">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
-            Supports TikTok, Facebook & Instagram links
-        </div>
-
-        <div class="mascot-container">
-            <svg width="100" height="100" viewBox="0 0 100 100" fill="#000">
-                <circle cx="50" cy="50" r="45" fill="#f3f4f6" stroke="#000" stroke-width="3"/>
-                <path d="M30 40 L45 50 L30 60 Z M70 40 L55 50 L70 60 Z" fill="#000"/>
-                <circle cx="40" cy="45" r="4" fill="#000"/>
-                <circle cx="60" cy="45" r="4" fill="#000"/>
-                <path d="M42 65 Q50 72 58 65" stroke="#000" stroke-width="3" fill="none" stroke-linecap="round"/>
-            </svg>
-        </div>
-
-        <div class="input-group">
-            <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-            <input type="text" id="videoUrl" placeholder="Paste your video link here">
-        </div>
-
-        <div class="controls-row">
-            <button class="control-btn active" id="btnAuto" onclick="setMode('auto')">✨ Auto</button>
-            <button class="control-btn" id="btnAudio" onclick="setMode('audio')">🎵 Audio</button>
-            <button class="control-btn" id="btnMute" onclick="setMode('mute')">🔇 Mute</button>
-            <button class="control-btn" onclick="pasteClipboard()">📋 Paste</button>
-        </div>
-
-        <!-- Custom Checkbox Statement -->
-        <label class="checkbox-group">
-            <input type="checkbox" id="termsCheck">
-            <span>I confirm this is my video or I have permission to download it (under our <a onclick="event.preventDefault(); openModal('termsModal')">Terms of Service</a> & <a onclick="event.preventDefault(); openModal('privacyModal')">Privacy Policy</a>).</span>
-        </label>
-
-        <button class="download-btn" id="dlBtn" onclick="processDownload()">Download Video</button>
-
-        <div class="status-message" id="statusMsg"></div>
-    </div>
-
-    <!-- Bottom Navigation Bar -->
-    <div class="bottom-nav">
-        <button class="nav-item" onclick="document.getElementById('videoUrl').focus()">
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Save
-        </button>
-        <button class="nav-item" onclick="openModal('termsModal')">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            Terms
-        </button>
-        <button class="nav-item" onclick="openModal('privacyModal')">
-            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Privacy
-        </button>
-        <button class="nav-item" onclick="openModal('aboutModal')">
-            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            About
-        </button>
-    </div>
-
-    <div class="platforms-footer">
-        <span>TikTok</span> • <span>Facebook</span> • <span>Instagram</span>
-    </div>
-
-    <!-- Clean Adsterra Container Placement -->
-    <div class="ad-container">
-        <script data-cfasync="false" src="https://accountut.com/1/11d9f607197459c0ed4ad7f7b7e57f26"></script>
-    </div>
-
-    <!-- Terms Modal -->
-    <div class="modal" id="termsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Terms of Service</h2>
-                <button class="close-modal" onclick="closeModal('termsModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <h3>1. Acceptance of Terms</h3>
-                <p>By accessing and using Clipify, you agree to comply with these Terms of Service. This platform is strictly dedicated to non-harmful, lawful media management.</p>
-                <h3>2. Permitted & Ethical Use</h3>
-                <p>Clipify provides web tools solely to help users securely save personal videos from TikTok, Facebook, and Instagram. Downloading copyrighted content without explicit permission or using media for malicious, abusive, or unlawful purposes is strictly forbidden.</p>
-                <h3>3. Intellectual Property</h3>
-                <p>Clipify does not host, re-upload, or store media files on its servers. Users maintain full responsibility for verifying ownership and proper licensing of media assets processed through the platform.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Privacy Policy Modal -->
-    <div class="modal" id="privacyModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Privacy Policy</h2>
-                <button class="close-modal" onclick="closeModal('privacyModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <h3>1. Data Protection & Privacy</h3>
-                <p>Clipify respects user privacy. We do not store download histories, log individual video URLs, or collect personal identifying details during processing.</p>
-                <h3>2. Safe Advertising Standards</h3>
-                <p>We work with third-party ad networks (such as Adsterra) to deliver non-intrusive banner advertisements. Ad experiences are governed by strict standard safety guidelines to maintain a clean user environment free from harmful content.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- About Modal -->
-    <div class="modal" id="aboutModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>About Clipify</h2>
-                <button class="close-modal" onclick="closeModal('aboutModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Clipify v1.0 Pro is a fast web utility created to assist video owners in safely archiving and backing up their personal media assets from TikTok, Facebook, and Instagram.</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let currentMode = 'auto';
-
-        function setMode(mode) {
-            currentMode = mode;
-            document.getElementById('btnAuto').classList.remove('active');
-            document.getElementById('btnAudio').classList.remove('active');
-            document.getElementById('btnMute').classList.remove('active');
-
-            if (mode === 'auto') document.getElementById('btnAuto').classList.add('active');
-            if (mode === 'audio') document.getElementById('btnAudio').classList.add('active');
-            if (mode === 'mute') document.getElementById('btnMute').classList.add('active');
-        }
-
-        async function pasteClipboard() {
-            try {
-                const text = await navigator.clipboard.readText();
-                document.getElementById('videoUrl').value = text;
-            } catch (err) {
-                showStatus('Clipboard permission denied. Please paste manually.', 'error');
-            }
-        }
-
-        function showStatus(msg, type) {
-            const el = document.getElementById('statusMsg');
-            el.className = 'status-message ' + type;
-            el.innerText = msg;
-        }
-
-        function openModal(id) {
-            document.getElementById(id).style.display = 'flex';
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        function isValidPlatformUrl(url) {
-            const lowerUrl = url.toLowerCase();
-            const isTikTok = lowerUrl.includes('tiktok.com') || lowerUrl.includes('vm.tiktok.com');
-            const isFacebook = lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch') || lowerUrl.includes('fb.me');
-            const isInstagram = lowerUrl.includes('instagram.com') || lowerUrl.includes('instagr.am');
-            return isTikTok || isFacebook || isInstagram;
-        }
-
-        async function processDownload() {
-            const urlInput = document.getElementById('videoUrl').value.trim();
-            const termsChecked = document.getElementById('termsCheck').checked;
-            const btn = document.getElementById('dlBtn');
-
-            if (!termsChecked) {
-                showStatus('Please confirm you own the video or have permission to download it.', 'error');
-                return;
-            }
-
-            if (!urlInput) {
-                showStatus('Please paste your video link first.', 'error');
-                return;
-            }
-
-            if (!isValidPlatformUrl(urlInput)) {
-                showStatus('Only TikTok, Facebook, and Instagram links are supported.', 'error');
-                return;
-            }
-
-            btn.disabled = true;
-            showStatus('Connecting to secure server...', 'info');
-
-            // Public backend endpoint wrapped inside CORS Proxy to bypass browser cross-origin blocks
-            const targetEndpoint = 'https://api.cobalt.tools/api/json';
-            const wrappedProxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetEndpoint);
-
-            try {
-                showStatus('Fetching your video...', 'info');
-                const response = await fetch(wrappedProxyUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        url: urlInput,
-                        downloadMode: currentMode === 'audio' ? 'audio' : 'auto',
-                        isAudioOnly: currentMode === 'audio',
-                        isAudioMuted: currentMode === 'mute'
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Server returned an invalid response');
-                }
-
-                const data = await response.json();
-
-                if (data.url) {
-                    showStatus('Download ready! Starting transfer...', 'success');
-                    window.location.href = data.url;
-                } else if (data.status === 'picker' && data.picker && data.picker.length > 0) {
-                    showStatus('Download ready! Opening file...', 'success');
-                    window.location.href = data.picker[0].url;
-                } else {
-                    showStatus(data.text || 'Unable to process this link. Please try again.', 'error');
-                }
-            } catch (err) {
-                showStatus('Download server is temporary busy. Please try again in a few seconds.', 'error');
-            } finally {
-                btn.disabled = false;
-            }
-        }
-    </script>
-</body>
-</html>
+    } catch (err) {
+        showStatus('Download server is busy. Try pasting the link again or check your URL.', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
