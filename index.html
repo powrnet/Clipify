@@ -118,8 +118,8 @@
       const inputUrl = document.getElementById('videoUrl').value.trim();
       if (!inputUrl) return;
 
-      // Direct seamless processing pipeline
-      const targetUrl = `https://co.wuk.sh/?url=${encodeURIComponent(inputUrl)}`;
+      // Point directly to the active cobalt.tools domain endpoint
+      const targetUrl = `https://cobalt.tools/?url=${encodeURIComponent(inputUrl)}`;
       window.location.href = targetUrl;
     }
   </script>
