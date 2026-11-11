@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipify - Fast & Clean Social Media Video Downloader</title>
+  <meta name="description" content="Download videos effortlessly from Instagram, Facebook, YouTube, and TikTok with Clipify. Fast, free, and clean." />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- ==================================================== -->
+  <!-- PASTE ADSTERRA HEAD SCRIPTS (Social Bar / Popunder) BELOW HERE -->
+  <!-- ==================================================== -->
+  
+  <!-- ==================================================== -->
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+
+  <!-- Header & Navigation -->
+  <header class="w-full border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <div class="bg-blue-600 p-2 rounded-xl">
+          <i data-lucide="download" class="w-6 h-6 text-white"></i>
+        </div>
+        <span class="text-2xl font-black tracking-tight">Clip<span class="text-blue-500">ify</span></span>
+      </div>
+      <span class="text-xs bg-slate-800 text-slate-400 px-3 py-1 rounded-full border border-slate-700">v1.0 Free</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="w-full max-w-3xl mx-auto px-4 py-8 flex-1 flex flex-col items-center">
+    
+    <!-- Hero Section -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-3 tracking-tight">
+        Download Social Media Videos <span class="text-blue-500">Instantly</span>
+      </h1>
+      <p class="text-slate-400 text-sm sm:text-base max-w-lg mx-auto">
+        Fast, clean, and unlimited downloads for Instagram, TikTok, YouTube, and Facebook.
+      </p>
+    </div>
+
+    <!-- Downloader Card -->
+    <div class="w-full bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-2xl backdrop-blur-sm">
+      
+      <!-- Input Form -->
+      <form id="downloadForm" onsubmit="processDownload(event)" class="space-y-4">
+        <div class="relative flex items-center">
+          <input 
+            type="url" 
+            id="videoUrl" 
+            placeholder="Paste video link here (e.g. https://instagram.com/p/...)" 
+            required 
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3.5 pl-4 pr-12 text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+          />
+          <button 
+            type="button" 
+            onclick="pasteClipboard()" 
+            title="Paste from clipboard"
+            class="absolute right-3 p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
+          >
+            <i data-lucide="clipboard" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Format Options -->
+        <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+          <div class="flex gap-4">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" name="format" value="video" checked class="accent-blue-500" />
+              <span>Video (MP4)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" name="format" value="audio" class="accent-blue-500" />
+              <span>Audio Only (MP3)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          id="submitBtn"
+          class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
+        >
+          <i data-lucide="arrow-down-circle" class="w-5 h-5"></i>
+          <span>Get Download Links</span>
+        </button>
+      </form>
+
+      <!-- Status / Results Box -->
+      <div id="resultContainer" class="hidden mt-6 pt-6 border-t border-slate-700/60">
+        <!-- Loader State -->
+        <div id="loadingState" class="hidden text-center py-4 space-y-3">
+          <div class="inline-block animate-spin text-blue-500">
+            <i data-lucide="loader-2" class="w-8 h-8"></i>
+          </div>
+          <p class="text-sm text-slate-400">Fetching download links from server...</p>
+        </div>
+
+        <!-- Success Result -->
+        <div id="successState" class="hidden space-y-4">
+          <div class="flex items-center gap-3 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+            <div id="videoThumb" class="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 text-slate-500">
+              <i data-lucide="video" class="w-8 h-8"></i>
+            </div>
+            <div class="overflow-hidden flex-1">
+              <h4 id="videoTitle" class="text-sm font-semibold text-white truncate">Social Media Video</h4>
+              <p id="videoPlatform" class="text-xs text-blue-400">Ready for download</p>
+            </div>
+          </div>
+
+          <a 
+            id="downloadLinkBtn" 
+            href="#" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm"
+          >
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download File Now</span>
+          </a>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-center">
+          <p id="errorMessage" class="text-xs text-rose-400">Could not fetch video. Please double-check the URL and try again.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Supported Platforms Badge Bar -->
+    <div class="flex flex-wrap items-center justify-center gap-4 mt-6 text-xs text-slate-400 font-medium">
+      <span class="flex items-center gap-1.5"><i data-lucide="instagram" class="w-4 h-4 text-pink-500"></i> Instagram</span>
+      <span>•</span>
+      <span class="flex items-center gap-1.5"><i data-lucide="video" class="w-4 h-4 text-cyan-400"></i> TikTok</span>
+      <span>•</span>
+      <span class="flex items-center gap-1.5"><i data-lucide="youtube" class="w-4 h-4 text-red-500"></i> YouTube</span>
+      <span>•</span>
+      <span class="flex items-center gap-1.5"><i data-lucide="facebook" class="w-4 h-4 text-blue-500"></i> Facebook</span>
+    </div>
+
+    <!-- ==================================================== -->
+    <!-- ADSTERRA NATIVE BANNER AD CONTAINER BELOW HERE -->
+    <!-- ==================================================== -->
+    <div class="w-full mt-8 flex justify-center min-h-[90px] bg-slate-800/30 border border-dashed border-slate-800 rounded-xl items-center text-slate-600 text-xs">
+      <!-- Paste your 728x90 or 300x250 Adsterra Banner Script Here -->
+      <span>Ad Space</span>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-5xl mx-auto px-4 space-y-2">
+      <p>&copy; 2026 Clipify. Fast, clean, and personal media downloader utility.</p>
+      <p class="text-[11px] text-slate-600">Clipify does not host copyrighted media. Users are responsible for complying with content creator licenses.</p>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Clipboard API Helper
+    async function pasteClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('videoUrl').value = text;
+        }
+      } catch (err) {
+        console.log('Clipboard access denied or unsupported');
+      }
+    }
+
+    // Downloader Fetch Handler (Cobalt API Integration)
+    async function processDownload(e) {
+      e.preventDefault();
+      
+      const inputUrl = document.getElementById('videoUrl').value.trim();
+      const formatRadio = document.querySelector('input[name="format"]:checked').value;
+      
+      const resultContainer = document.getElementById('resultContainer');
+      const loadingState = document.getElementById('loadingState');
+      const successState = document.getElementById('successState');
+      const errorState = document.getElementById('errorState');
+      const submitBtn = document.getElementById('submitBtn');
+
+      // Reset Display States
+      resultContainer.classList.remove('hidden');
+      loadingState.classList.remove('hidden');
+      successState.classList.add('hidden');
+      errorState.classList.add('hidden');
+      submitBtn.disabled = true;
+
+      try {
+        // Direct integration with public Cobalt processing instance
+        const response = await fetch('https://co.wuk.sh/api/json', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            url: inputUrl,
+            isAudioOnly: formatRadio === 'audio',
+            aFormat: 'mp3',
+            vQuality: '720'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data && (data.url || data.picker)) {
+          const downloadUrl = data.url || (data.picker && data.picker[0] ? data.picker[0].url : null);
+          
+          if (downloadUrl) {
+            document.getElementById('downloadLinkBtn').href = downloadUrl;
+            document.getElementById('videoPlatform').textContent = formatRadio === 'audio' ? 'Audio Stream (MP3)' : 'Video Stream (MP4)';
+            
+            loadingState.classList.add('hidden');
+            successState.classList.remove('hidden');
+          } else {
+            throw new Error('No download stream found.');
+          }
+        } else {
+          throw new Error(data.text || 'Unable to fetch video source.');
+        }
+
+      } catch (err) {
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        document.getElementById('errorMessage').textContent = err.message || 'Error connecting to downloader stream. Please check link format.';
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
