@@ -10,10 +10,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- PASTE ADSTERRA HEAD SCRIPTS HERE -->
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
 
-  <!-- Header & Navigation -->
+  <!-- Header -->
   <header class="w-full border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
     <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
@@ -26,11 +28,11 @@
     </div>
   </header>
 
-  <!-- Main Container -->
+  <!-- Main Content -->
   <main class="w-full max-w-3xl mx-auto px-4 py-8 flex-1 flex flex-col items-center">
     
-    <!-- Hero Section -->
-    <div class="text-center mb-6">
+    <!-- Hero Title -->
+    <div class="text-center mb-8">
       <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-3 tracking-tight">
         Download Social Media Videos <span class="text-blue-500">Instantly</span>
       </h1>
@@ -39,10 +41,9 @@
       </p>
     </div>
 
-    <!-- Downloader Card -->
-    <div class="w-full bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-2xl backdrop-blur-sm space-y-4">
+    <!-- Downloader Box -->
+    <div class="w-full bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-2xl backdrop-blur-sm">
       
-      <!-- Input Form -->
       <form id="downloadForm" onsubmit="processDownload(event)" class="space-y-4">
         <div class="relative flex items-center">
           <input 
@@ -62,7 +63,6 @@
           </button>
         </div>
 
-        <!-- Submit Button -->
         <button 
           type="submit" 
           id="submitBtn"
@@ -73,27 +73,52 @@
         </button>
       </form>
 
-      <!-- Embedded Downloader Frame (Stays 100% on your page) -->
-      <div id="frameContainer" class="hidden w-full pt-4 border-t border-slate-700/60">
-        <div class="w-full bg-slate-900 rounded-xl overflow-hidden border border-slate-700 relative" style="height: 380px;">
-          <div id="loadingOverlay" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center gap-3 z-10 text-slate-400">
-            <div class="inline-block animate-spin text-blue-500">
-              <i data-lucide="loader-2" class="w-8 h-8"></i>
-            </div>
-            <p class="text-xs">Preparing secure stream on Clipify...</p>
+      <!-- Status and Direct Result Output -->
+      <div id="resultContainer" class="hidden mt-6 pt-6 border-t border-slate-700/60">
+        
+        <!-- Loading Spinner -->
+        <div id="loadingState" class="hidden text-center py-4 space-y-3">
+          <div class="inline-block animate-spin text-blue-500">
+            <i data-lucide="loader-2" class="w-8 h-8"></i>
           </div>
-          <iframe 
-            id="embedFrame" 
-            src="" 
-            class="w-full h-full border-0" 
-            onload="hideLoader()"
-          ></iframe>
+          <p class="text-sm text-slate-400">Extracting video file...</p>
         </div>
+
+        <!-- Download Ready State -->
+        <div id="successState" class="hidden space-y-4">
+          <div class="flex items-center gap-3 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+            <div class="w-12 h-12 bg-emerald-600/20 text-emerald-400 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i data-lucide="check-circle" class="w-6 h-6"></i>
+            </div>
+            <div class="overflow-hidden flex-1">
+              <h4 class="text-sm font-semibold text-white">Video Ready</h4>
+              <p class="text-xs text-slate-400">Click below to save to your device</p>
+            </div>
+          </div>
+
+          <a 
+            id="downloadLinkBtn" 
+            href="#" 
+            download
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm shadow-lg shadow-emerald-600/20"
+          >
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Save Video File</span>
+          </a>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-center">
+          <p id="errorMessage" class="text-xs text-rose-400">Unable to extract video. Please make sure the link is public.</p>
+        </div>
+
       </div>
 
     </div>
 
-    <!-- Supported Platforms Badge Bar -->
+    <!-- Supported Platforms -->
     <div class="flex flex-wrap items-center justify-center gap-4 mt-6 text-xs text-slate-400 font-medium">
       <span class="flex items-center gap-1.5"><i data-lucide="instagram" class="w-4 h-4 text-pink-500"></i> Instagram</span>
       <span>•</span>
@@ -104,7 +129,7 @@
       <span class="flex items-center gap-1.5"><i data-lucide="facebook" class="w-4 h-4 text-blue-500"></i> Facebook</span>
     </div>
 
-    <!-- Ad Space Container (Ready for Adsterra code) -->
+    <!-- Adsterra Container -->
     <div class="w-full mt-8 flex justify-center min-h-[90px] bg-slate-800/30 border border-dashed border-slate-800 rounded-xl items-center text-slate-600 text-xs">
       <span>Ad Space (Paste Adsterra Code Here)</span>
     </div>
@@ -119,43 +144,79 @@
     </div>
   </footer>
 
-  <!-- Application Logic -->
+  <!-- Inline Script -->
   <script>
     lucide.createIcons();
 
     async function pasteClipboard() {
       try {
         const text = await navigator.clipboard.readText();
-        if (text) {
-          document.getElementById('videoUrl').value = text;
-        }
+        if (text) document.getElementById('videoUrl').value = text;
       } catch (err) {
-        console.log('Clipboard access denied');
+        console.log('Clipboard unavailable');
       }
     }
 
-    function processDownload(e) {
+    async function processDownload(e) {
       e.preventDefault();
       
       const inputUrl = document.getElementById('videoUrl').value.trim();
       if (!inputUrl) return;
 
-      const frameContainer = document.getElementById('frameContainer');
-      const embedFrame = document.getElementById('embedFrame');
-      const loadingOverlay = document.getElementById('loadingOverlay');
+      const resultContainer = document.getElementById('resultContainer');
+      const loadingState = document.getElementById('loadingState');
+      const successState = document.getElementById('successState');
+      const errorState = document.getElementById('errorState');
+      const submitBtn = document.getElementById('submitBtn');
 
-      // Show loader and frame container right on the page
-      loadingOverlay.style.display = 'flex';
-      frameContainer.classList.remove('hidden');
+      resultContainer.classList.remove('hidden');
+      loadingState.classList.remove('hidden');
+      successState.classList.add('hidden');
+      errorState.classList.add('hidden');
+      submitBtn.disabled = true;
 
-      // Load the target engine securely inside the page frame
-      embedFrame.src = `https://cobalt.tools/?url=${encodeURIComponent(inputUrl)}`;
-    }
+      // Primary & fallback CORS API endpoints for direct stream extraction
+      const endpoints = [
+        'https://api.cobalt.tools/api/json',
+        'https://cobalt-api.kwiatekm.pl/api/json'
+      ];
 
-    function hideLoader() {
-      const loadingOverlay = document.getElementById('loadingOverlay');
-      if (loadingOverlay) {
-        loadingOverlay.style.display = 'none';
+      let downloadUrl = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url: inputUrl })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.url) {
+              downloadUrl = data.url;
+              break;
+            } else if (data.picker && data.picker[0]?.url) {
+              downloadUrl = data.picker[0].url;
+              break;
+            }
+          }
+        } catch (err) {
+          console.warn('Endpoint failed, trying fallback...');
+        }
+      }
+
+      loadingState.classList.add('hidden');
+      submitBtn.disabled = false;
+
+      if (downloadUrl) {
+        document.getElementById('downloadLinkBtn').href = downloadUrl;
+        successState.classList.remove('hidden');
+      } else {
+        errorState.classList.remove('hidden');
       }
     }
   </script>
