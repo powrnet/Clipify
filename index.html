@@ -1,104 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clipify - Fast & Clean Social Media Video Downloader</title>
-  <meta name="description" content="Download videos effortlessly from Instagram, Facebook, YouTube, and TikTok with Clipify. Fast, free, and clean." />
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipify - Download Social Media Videos Instantly</title>
+    <style>
+        /* Base Reset & Styling */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
-  <!-- Adsterra Popunder Script -->
-  <script data-cfasync="false" src="https://accountut.com/1/11d9f607197459c0ed4ad7f7b7e57f26"></script>
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header-top {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .logo-badge {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            padding: 8px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .version-tag {
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: #93c5fd;
+        }
+
+        .hero-title {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .hero-title h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .hero-title h1 span {
+            color: #3b82f6;
+        }
+
+        .hero-subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #9ca3af;
+            max-width: 500px;
+            margin-bottom: 25px;
+        }
+
+        /* Main Card Container */
+        .main-card {
+            background: #ffffff;
+            color: #111827;
+            width: 100%;
+            max-width: 550px;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .supported-services {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #4b5563;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .mascot-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .mascot-container img {
+            width: 120px;
+            height: auto;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 14px 14px 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: #3b82f6;
+        }
+
+        .input-group svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            fill: #6b7280;
+        }
+
+        .controls-row {
+            display: flex;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: #4b5563;
+            transition: all 0.2s;
+        }
+
+        .control-btn.active {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .terms-text {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #6b7280;
+        }
+
+        .terms-text a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        /* Bottom Nav Bar */
+        .bottom-nav {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 550px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 5px;
+            margin-bottom: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #9ca3af;
+            font-size: 0.7rem;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .platforms-footer {
+            display: flex;
+            gap: 20px;
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        /* Ad Container Integration */
+        .ad-container {
+            width: 100%;
+            max-width: 550px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-blue-600 selection:text-white">
+<body>
 
-  <!-- Header -->
-  <header class="w-full border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-4 py-3.5 flex justify-between items-center">
-      <div class="flex items-center gap-2.5">
-        <div class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/30">
-          <i data-lucide="download" class="w-5 h-5 text-white"></i>
+    <!-- Header / Top Bar -->
+    <div class="header-top">
+        <div class="logo-area">
+            <div class="logo-badge">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </div>
+            Clipify
         </div>
-        <span class="text-xl font-black tracking-tight">Clip<span class="text-blue-500">ify</span></span>
-      </div>
-      <span class="text-xs bg-slate-800/80 text-slate-400 px-3 py-1 rounded-full border border-slate-700/60 font-medium">v1.0 Pro</span>
+        <div class="version-tag">v1.0 Pro</div>
     </div>
-  </header>
 
-  <!-- Main Content -->
-  <main class="w-full max-w-3xl mx-auto px-4 py-8 flex-1 flex flex-col items-center">
-    
-    <!-- Hero Title -->
-    <div class="text-center mb-6">
-      <h1 class="text-3xl sm:text-4xl font-black text-white mb-2 tracking-tight">
-        Download Social Media Videos <span class="text-blue-500">Instantly</span>
-      </h1>
-      <p class="text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
+    <!-- Hero Section -->
+    <div class="hero-title">
+        <h1>Download Social Media Videos<br><span>Instantly</span></h1>
+    </div>
+    <div class="hero-subtitle">
         Fast, clean, and unlimited downloads for Instagram, TikTok, YouTube, and Facebook.
-      </p>
     </div>
 
-    <!-- Professional Downloader Box -->
-    <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-md">
-      
-      <!-- Embedded Professional Frame -->
-      <div class="w-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800/80 relative shadow-inner" style="height: 480px;">
-        <div id="loadingOverlay" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center gap-3 z-10 text-slate-400">
-          <div class="inline-block animate-spin text-blue-500">
-            <i data-lucide="loader-2" class="w-7 h-7"></i>
-          </div>
-          <p class="text-xs font-medium tracking-wide text-slate-400">Initializing Clipify Engine...</p>
+    <!-- Main Tool Card -->
+    <div class="main-card">
+        <div class="supported-services">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            supported services
         </div>
-        <iframe 
-          src="https://cobalt.tools" 
-          class="w-full h-full border-0" 
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
-          onload="hideLoader()"
-        ></iframe>
-      </div>
 
+        <div class="mascot-container">
+            <!-- Simple clean inline SVG graphic placeholder for your mascot -->
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="#000">
+                <circle cx="50" cy="50" r="45" fill="#f3f4f6" stroke="#000" stroke-width="3"/>
+                <path d="M30 40 L45 50 L30 60 Z M70 40 L55 50 L70 60 Z" fill="#000"/>
+                <circle cx="40" cy="45" r="4" fill="#000"/>
+                <circle cx="60" cy="45" r="4" fill="#000"/>
+                <path d="M42 65 Q50 72 58 65" stroke="#000" stroke-width="3" fill="none" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <div class="input-group">
+            <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            <input type="text" placeholder="paste the link here">
+        </div>
+
+        <div class="controls-row">
+            <button class="control-btn active">✨ auto</button>
+            <button class="control-btn">🎵 audio</button>
+            <button class="control-btn">🔇 mute</button>
+            <button class="control-btn">📋 paste</button>
+        </div>
+
+        <div class="terms-text">
+            by continuing, you agree to <a href="#">terms and ethics of use</a>
+        </div>
     </div>
 
-    <!-- Supported Platforms Badge Bar -->
-    <div class="flex flex-wrap items-center justify-center gap-3 mt-6 text-xs text-slate-400 font-medium bg-slate-900/50 border border-slate-800/60 px-4 py-2.5 rounded-xl">
-      <span class="flex items-center gap-1.5"><i data-lucide="instagram" class="w-3.5 h-3.5 text-pink-500"></i> Instagram</span>
-      <span class="text-slate-700">•</span>
-      <span class="flex items-center gap-1.5"><i data-lucide="video" class="w-3.5 h-3.5 text-cyan-400"></i> TikTok</span>
-      <span class="text-slate-700">•</span>
-      <span class="flex items-center gap-1.5"><i data-lucide="youtube" class="w-3.5 h-3.5 text-red-500"></i> YouTube</span>
-      <span class="text-slate-700">•</span>
-      <span class="flex items-center gap-1.5"><i data-lucide="facebook" class="w-3.5 h-3.5 text-blue-500"></i> Facebook</span>
+    <!-- Bottom Navigation Bar -->
+    <div class="bottom-nav">
+        <a class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            save
+        </a>
+        <a class="nav-item">
+            <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+            remux
+        </a>
+        <a class="nav-item">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            settings
+        </a>
+        <a class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            donate
+        </a>
+        <a class="nav-item">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            updates
+        </a>
+        <a class="nav-item">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            about
+        </a>
     </div>
 
-    <!-- Ad Space Container (Ready for future Banner or Native codes) -->
-    <div class="w-full mt-6 flex justify-center min-h-[90px] bg-slate-900/40 border border-dashed border-slate-800 rounded-xl items-center text-slate-500 text-xs tracking-wide">
-      <span>Ad Space (Ready for Banner / Native Ad Unit)</span>
+    <!-- Supported Platforms Label Footer -->
+    <div class="platforms-footer">
+        <span>Instagram</span> • <span>TikTok</span> • <span>YouTube</span> • <span>Facebook</span>
     </div>
 
-  </main>
-
-  <!-- Footer -->
-  <footer class="w-full border-t border-slate-800/80 py-5 text-center text-xs text-slate-500 bg-slate-950">
-    <div class="max-w-4xl mx-auto px-4 space-y-1.5">
-      <p>&copy; 2026 Clipify. Fast, clean, and personal media downloader utility.</p>
-      <p class="text-[10px] text-slate-600">Clipify does not host copyrighted media. Users are responsible for complying with content creator licenses.</p>
+    <!-- Adsterra Script Integrated Here -->
+    <div class="ad-container">
+        <script data-cfasync="false" src="https://accountut.com/1/11d9f607197459c0ed4ad7f7b7e57f26"></script>
     </div>
-  </footer>
 
-  <!-- Script -->
-  <script>
-    lucide.createIcons();
-
-    function hideLoader() {
-      const loader = document.getElementById('loadingOverlay');
-      if (loader) {
-        loader.style.display = 'none';
-      }
-    }
-  </script>
 </body>
 </html>
