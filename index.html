@@ -159,13 +159,11 @@
       e.preventDefault();
       
       const inputUrl = document.getElementById('videoUrl').value.trim();
-      const formatRadio = document.querySelector('input[name="format"]:checked').value;
-      
       const resultContainer = document.getElementById('resultContainer');
       const downloadBtn = document.getElementById('downloadLinkBtn');
 
-      // Safely encode and format target link for high-speed retrieval mirror
-      const secureRedirectUrl = `https://co.wuk.sh/?url=${encodeURIComponent(inputUrl)}`;
+      // Update to official cobalt.tools domain URL structure
+      const secureRedirectUrl = `https://cobalt.tools/?url=${encodeURIComponent(inputUrl)}`;
       
       downloadBtn.href = secureRedirectUrl;
       resultContainer.classList.remove('hidden');
